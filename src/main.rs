@@ -4,7 +4,6 @@ use std::env;
 
 use chrono::prelude::{NaiveDateTime};
 
-#[derive(Debug)]
 struct EpochArg {
     epoch: i64,
     parsed_value: NaiveDateTime
@@ -16,7 +15,7 @@ impl EpochArg {
     }
 
     fn fmt_for_user(&self) -> String {
-        self.parsed_value.format("%Y-%m-%d %H:%M:%S").to_string()
+        format!("{} => {}", self.epoch, self.parsed_value.format("%Y-%m-%d %H:%M:%S").to_string())
     }
 }
 
@@ -31,9 +30,6 @@ fn main() {
         let parsed_elem = elem.parse::<i64>().unwrap();
         parsed_input.push(EpochArg::new(parsed_elem))
     }
-    
-    // let naive: NaiveDateTime = NaiveDateTime::from_timestamp(args.epoch , 0);
-    // let string = naive.format("%Y-%m-%d %H:%M:%S");
 
     for i in parsed_input {
         println!("{}", i.fmt_for_user())
