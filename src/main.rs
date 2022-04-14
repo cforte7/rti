@@ -1,5 +1,6 @@
 extern crate chrono;
-use chrono::prelude::NaiveDateTime;
+use chrono::prelude::{Local, NaiveDateTime};
+
 use std::env;
 struct EpochArg {
     arg: String,
@@ -14,10 +15,10 @@ fn epoch_to_datetime(epoch: i64) -> String {
 
 fn parse_string(arg: &String) -> String {
     // take in datetime string and return epoch as string
-    NaiveDateTime::parse_from_str(arg, DATETIME_PARSE_FORMAT)
-        .unwrap()
-        .timestamp()
-        .to_string()
+    match arg.to_lowercase().as_str() {
+        "now" => Local::now().timestamp().to_string(),
+        _ => "Unsupported keyword".to_string(),
+    }
 }
 
 impl EpochArg {
