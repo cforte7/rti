@@ -1,33 +1,43 @@
-// use clap::Parser;
 extern crate chrono;
+use chrono::prelude::NaiveDateTime;
 use std::env;
-
-use chrono::prelude::{NaiveDateTime};
-
-enum InputArgTypes {
-    EpochInput,
-    StringInput,
-}
-
 struct EpochArg {
-    original_input: String,
+    arg: String,
 }
 const DATETIME_PARSE_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
 
+fn epoch_to_datetime(epoch: i64) -> String {
+    // take in epoch time and return datetime as string
+    let datetime = NaiveDateTime::from_timestamp(epoch, 0);
+    datetime.format(DATETIME_PARSE_FORMAT).to_string()
+}
+
+fn parse_string(arg: &String) -> String {
+    // take in datetime string and return epoch as string
+    NaiveDateTime::parse_from_str(arg, DATETIME_PARSE_FORMAT)
+        .unwrap()
+        .timestamp()
+        .to_string()
+}
+
 impl EpochArg {
-    fn new(original_input: String) -> EpochArg {
-        EpochArg{original_input}
+    fn new(arg: String) -> EpochArg {
+        EpochArg { arg }
     }
 
     fn fmt_for_user(&self) -> String {
-        format!("{} => {}", self.original_input, self.parsed_value.format("%Y-%m-%d %H:%M:%S")).to_string()
+        let maybe_int_parse = self.arg.parse::<i64>();
+        let parsed_value = match maybe_int_parse {
+            Ok(val) => epoch_to_datetime(val),
+            Err(_) => parse_string(&self.arg),
+        };
+
+        format!("{} => {}", self.arg, parsed_value).to_string()
     }
 }
 
-
-
 fn parse_inputs(input_args: Vec<String>) -> Vec<EpochArg> {
-    // Take in arbitrary number of inputs and convert them to EpochArg struct
+    // Take in arbitrary number of inputs and convert them to EpochArg
     let mut parsed_input = vec![];
 
     // first arg is always path to file which we do not want
@@ -44,5 +54,4 @@ fn main() {
     for i in parsed_inputs {
         println!("{}", i.fmt_for_user());
     }
-
 }
