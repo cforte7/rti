@@ -1,6 +1,5 @@
 extern crate chrono;
 use chrono::prelude::{Local, NaiveDateTime};
-use regex::Regex;
 
 use std::env;
 
@@ -9,16 +8,6 @@ const DATETIME_PARSE_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
 struct EpochArg {
     arg: String,
 }
-
-struct RegexConversion {
-    regex_checker: regex::Regex,
-    conversion: fn() -> String,
-}
-
-rustc slash_date_regex: Regex = Regex::new(
-    r"^[0,1]?\d{1}\/(([0-2]?\d{1})|([3][0,1]{1}))\/(([1]{1}[9]{1}[9]{1}\d{1})|([2-9]{1}\d{3}))$",
-)
-.unwrap();
 
 fn epoch_to_datetime(epoch: i64) -> String {
     // take in epoch time and return datetime as string
@@ -55,7 +44,7 @@ fn parse_inputs(input_args: Vec<String>) -> Vec<EpochArg> {
     let mut parsed_input = vec![];
 
     // first arg is always path to file which we do not want
-    // TODO: change it so the user separates args with a |
+    // TODO: change it so the user separates args with a delimiter
     // and then combine the args into one string then split back out
     // to allow entires with spaces such as a datetime e.g. '05-24-1993 05:22AM'
     for elem in input_args[1..input_args.len()].iter() {
