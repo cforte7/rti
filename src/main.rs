@@ -1,7 +1,10 @@
 extern crate chrono;
-use chrono::prelude::{Local, NaiveDateTime};
+use chrono::prelude::NaiveDateTime;
 
 use std::env;
+
+mod datetime_parsing;
+use datetime_parsing::datetime_parsing::parse_datetime;
 
 const DATETIME_PARSE_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
 
@@ -15,13 +18,13 @@ fn epoch_to_datetime(epoch: i64) -> String {
     datetime.format(DATETIME_PARSE_FORMAT).to_string()
 }
 
-fn parse_string(arg: &String) -> String {
-    // take in datetime string and return epoch as string
-    match arg.to_lowercase().as_str() {
-        "now" => Local::now().timestamp().to_string(),
-        _ => "Unsupported keyword".to_string(),
-    }
-}
+// fn parse_string(arg: &String) -> String {
+//     // take in datetime string and return epoch as string
+//     match arg.to_lowercase().as_str() {
+//         "now" => Local::now().timestamp().to_string(),
+//         _ => "Unsupported keyword".to_string(),
+//     }
+// }
 
 impl EpochArg {
     fn new(arg: String) -> EpochArg {
@@ -32,7 +35,7 @@ impl EpochArg {
         let maybe_int_parse = self.arg.parse::<i64>();
         let parsed_value = match maybe_int_parse {
             Ok(val) => epoch_to_datetime(val),
-            Err(_) => parse_string(&self.arg),
+            Err(_) => parse_datetime(&self.arg),
         };
 
         format!("{} => {}", self.arg, parsed_value).to_string()
