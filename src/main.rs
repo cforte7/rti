@@ -1,17 +1,26 @@
 extern crate chrono;
-use chrono::prelude::NaiveDateTime;
+use chrono::format::Parsed;
+use chrono::prelude::Local;
 
 use std::env;
 
 mod datetime_parsing;
 use datetime_parsing::datetime_parsing::parse_arg;
 
-const DATETIME_PARSE_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
+const DATETIME_PARSE_FORMAT: &str = "%m-%d-%Y %H:%M:%S";
 
 fn epoch_to_datetime(epoch: i64) -> String {
-    // take in epoch time and return datetime as string
-    let datetime = NaiveDateTime::from_timestamp(epoch, 0);
-    datetime.format(DATETIME_PARSE_FORMAT).to_string()
+    // take in epoch time and return datetime as string formatted for system timezone.
+    // todo: allow env var to specify timezone
+    let mut parsed = Parsed::new();
+    parsed.set_timestamp(epoch).unwrap();
+    let local_time = Local::now();
+    let timezone_offset = local_time.offset();
+    parsed
+        .to_datetime_with_timezone(timezone_offset)
+        .unwrap()
+        .format(DATETIME_PARSE_FORMAT)
+        .to_string()
 }
 
 fn fmt_and_print(arg: String) {

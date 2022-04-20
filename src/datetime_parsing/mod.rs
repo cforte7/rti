@@ -1,12 +1,14 @@
 pub mod datetime_parsing {
     use super::date_time_patterns::{DATE_PATTERNS, TIME_PATTERNS};
     use chrono::prelude::{Local, NaiveDate, NaiveDateTime, NaiveTime};
+    use chrono::Duration;
     use itertools::iproduct;
 
     pub const INVALID_ARG: &str = "Invalid Pattern"; // public for tests
 
     fn time_to_string(time: NaiveTime) -> String {
         // Add time to Date object of today to get DateTime
+        // currently tz unaware MUST FIX THIS.
         Local::today()
             .and_time(time)
             .unwrap()
@@ -55,8 +57,14 @@ pub mod datetime_parsing {
             }
         }
 
+        return match arg {
+            "now" => Local::now().timestamp().to_string(),
+            "tomorrow" => (Local::now() + Duration::days(1)).timestamp().to_string(),
+            _ => INVALID_ARG.to_string(),
+        };
+
         // if no matches found notify user we can't parse string
-        return INVALID_ARG.to_string();
+        // return INVALID_ARG.to_string();
     }
 }
 
