@@ -52,10 +52,8 @@ pub mod datetime_parsing {
 
         // for full datetime, allow any combination of the known date/time patterns
         let datetime_patterns = iproduct!(date_patterns, time_patterns);
-        println!("{:?}", datetime_patterns);
         for pattern in datetime_patterns {
             let parse_str = format!("{} {}", pattern.0, pattern.1);
-            println!("{}", parse_str);
             if let Ok(datetime) = NaiveDateTime::parse_from_str(arg, &*parse_str) {
                 // if we have a full datetime, we can go straight to timestamp
                 return datetime.timestamp().to_string();
