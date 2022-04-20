@@ -1,15 +1,5 @@
-// If datetime -> NaiveDateTime::parse_from_string(arg, fmt).timestamp
-// if date -> NaiveDate::parse_from_string(arg, fmt).and_hms(0,0,0).timestamp
-// if time ->
-//
-//
-//
-//
-//
-//
-
 pub mod datetime_parsing {
-    use chrono::prelude::{DateTime, Local, NaiveDate, NaiveTime};
+    use chrono::prelude::{Local, NaiveDate, NaiveDateTime, NaiveTime};
     use itertools::iproduct;
 
     pub const INVALID_ARG: &str = "Invalid Pattern"; // public for tests
@@ -62,10 +52,9 @@ pub mod datetime_parsing {
 
         // for full datetime, allow any combination of the known date/time patterns
         let datetime_patterns = iproduct!(date_patterns, time_patterns);
-        println!("{:?}", datetime_patterns);
         for pattern in datetime_patterns {
             let parse_str = format!("{} {}", pattern.0, pattern.1);
-            if let Ok(datetime) = DateTime::parse_from_str(arg, &*parse_str) {
+            if let Ok(datetime) = NaiveDateTime::parse_from_str(arg, &*parse_str) {
                 // if we have a full datetime, we can go straight to timestamp
                 return datetime.timestamp().to_string();
             }
@@ -114,15 +103,6 @@ mod time_tests {
 #[cfg(test)]
 mod date_tests {
     use super::datetime_parsing::parse_datetime;
-    // let date_patterns = [
-    //     "%m-%d-%y", // 5-24-93
-    //     "%m-%d-%Y", // 5-24-1993
-    //     "%m/%d/%Y",
-    //     "%D",
-    //     "%F",
-    //     "%v",
-    // ];
-
     const MAY_ONE_1993: &str = "736214400";
     #[test]
     fn test_dashes_long_year_no_pad() {
@@ -175,5 +155,26 @@ mod date_tests {
     fn test_dashes_day_word_month_year() {
         // "%F"
         assert_eq!(parse_datetime("1-May-1993"), MAY_ONE_1993)
+    }
+}
+
+#[cfg(test)]
+mod datetime_tests {
+    // Only going to test a few since the tests above are comprehensive and
+    // these are all functions of the above working
+    use super::datetime_parsing::parse_datetime;
+    const MAY_ONE_1993_FOUR_FIFTY: &str = "736231800";
+
+    #[test]
+    fn test_multi_part() {
+        assert_eq!(
+            parse_datetime("1-May-1993 4:50 AM"),
+            MAY_ONE_1993_FOUR_FIFTY
+        );
+    }
+
+    #[test]
+    fn test_slashes_date_lowercase_am() {
+        assert_eq!(parse_datetime("5/1/93 4:50 am"), MAY_ONE_1993_FOUR_FIFTY);
     }
 }
