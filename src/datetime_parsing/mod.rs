@@ -1,14 +1,14 @@
 pub mod datetime_parsing {
     use super::date_time_patterns::{DATE_PATTERNS, TIME_PATTERNS};
-    use chrono::prelude::{Local, NaiveDate, NaiveDateTime, NaiveTime};
+    use chrono::prelude::{FixedOffset, Local, NaiveDate, NaiveDateTime, NaiveTime};
     use chrono::Duration;
+
     use itertools::iproduct;
 
     pub const INVALID_ARG: &str = "Invalid Pattern"; // public for tests
 
     fn time_to_string(time: NaiveTime) -> String {
-        // Add time to Date object of today to get DateTime
-        // currently tz unaware MUST FIX THIS.
+        // Get tz aware datetime and offset with provided time.
         Local::today()
             .and_time(time)
             .unwrap()
@@ -17,8 +17,11 @@ pub mod datetime_parsing {
     }
 
     fn date_to_string(date: NaiveDate) -> String {
-        // need to add zero seconds to get full DateTime before converting to timestamp
-        date.and_hms(0, 0, 0).timestamp().to_string()
+        // Create datetime at midnight from date, offset with local timezone
+        let datetime = date.and_hms(0, 0, 0);
+        let local_time = Local::now();
+        let timezone_offset: &FixedOffset = local_time.offset();
+        (datetime - *timezone_offset).timestamp().to_string()
     }
 
     fn datetime_to_string(datetime: NaiveDateTime) -> String {
