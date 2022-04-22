@@ -1,9 +1,15 @@
 [package]
-name = "rts"
+name = "rti"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+authors = ["Chris Forte <cforte7@gmail.com>"]
+license= "MIT"
+description = "A tool to convert to/from unix epoch times."
+readme = "README.md"
+homepage = "https://github.com/cforte7/rusty_time_interpreter"
+repository = "https://github.com/cforte7/rusty_time_interpreter"
+keywords = ["time", "cli"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 chrono = "0.4"
