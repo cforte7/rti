@@ -134,7 +134,7 @@ mod time_tests {
 #[cfg(test)]
 mod date_tests {
     use super::datetime_parsing::parse_arg;
-    const MAY_ONE_1993: &str = "736214400";
+    const MAY_ONE_1993: &str = "736232400";
     #[test]
     fn test_dashes_long_year_no_pad() {
         // "%m-%d-%Y"
