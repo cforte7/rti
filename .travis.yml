@@ -7,3 +7,7 @@ jobs:
   allow_failures:
     - rust: nightly
   fast_finish: true
+script:
+  - cargo build --verbose --workspace
+  - cargo test --no-run
+cache: cargo

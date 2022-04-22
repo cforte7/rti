@@ -20,6 +20,16 @@ RTI takes in an arbitrary number of command line arguments, either integer unix 
 2022-04-22 11:40:09 => 1650627609
 ```
 
+There are also special keywords for `now`, `yesterday`, `tomorrow` which will give the epoch time for the current time of today, yesterday, and tomorrow respectively.
+
+```
+// run at April 22, 2022 at 8:11AM America/Chicago
+./rti now yesterday tomorrow
+now => 1650633061
+yesterday => 1650546661
+tomorrow => 1650719461
+```
+
 # Limitations (Planned Features)
 
 Currently RTI does not have support for the following (but are planned to be added over time).

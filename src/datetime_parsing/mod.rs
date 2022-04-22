@@ -1,12 +1,14 @@
 pub mod datetime_parsing {
     use super::date_time_patterns::{DATE_PATTERNS, TIME_PATTERNS};
-    use chrono::prelude::{Local, NaiveDate, NaiveDateTime, NaiveTime};
+    use chrono::prelude::{FixedOffset, Local, NaiveDate, NaiveDateTime, NaiveTime};
+    use chrono::Duration;
+
     use itertools::iproduct;
 
     pub const INVALID_ARG: &str = "Invalid Pattern"; // public for tests
 
     fn time_to_string(time: NaiveTime) -> String {
-        // Add time to Date object of today to get DateTime
+        // Get tz aware datetime and offset with provided time.
         Local::today()
             .and_time(time)
             .unwrap()
@@ -15,8 +17,11 @@ pub mod datetime_parsing {
     }
 
     fn date_to_string(date: NaiveDate) -> String {
-        // need to add zero seconds to get full DateTime before converting to timestamp
-        date.and_hms(0, 0, 0).timestamp().to_string()
+        // Create datetime at midnight from date, offset with local timezone
+        let datetime = date.and_hms(0, 0, 0);
+        let local_time = Local::now();
+        let timezone_offset: &FixedOffset = local_time.offset();
+        (datetime - *timezone_offset).timestamp().to_string()
     }
 
     fn datetime_to_string(datetime: NaiveDateTime) -> String {
@@ -55,8 +60,15 @@ pub mod datetime_parsing {
             }
         }
 
+        return match arg {
+            "yesterday" => (Local::now() + Duration::days(-1)).timestamp().to_string(),
+            "now" => Local::now().timestamp().to_string(),
+            "tomorrow" => (Local::now() + Duration::days(1)).timestamp().to_string(),
+            _ => INVALID_ARG.to_string(),
+        };
+
         // if no matches found notify user we can't parse string
-        return INVALID_ARG.to_string();
+        // return INVALID_ARG.to_string();
     }
 }
 
@@ -123,7 +135,7 @@ mod time_tests {
 #[cfg(test)]
 mod date_tests {
     use super::datetime_parsing::parse_arg;
-    const MAY_ONE_1993: &str = "736214400";
+    const MAY_ONE_1993: &str = "736232400";
     #[test]
     fn test_dashes_long_year_no_pad() {
         // "%m-%d-%Y"
