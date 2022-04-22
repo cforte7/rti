@@ -25,9 +25,11 @@ pub mod datetime_parsing {
 
     pub fn parse_arg(arg: &str) -> String {
         // Take an arg from the command line and try to match it to known date/time patterns
-        for pattern in TIME_PATTERNS {
-            if let Ok(time) = NaiveTime::parse_from_str(arg, pattern) {
-                return time_to_string(time);
+
+        let combined = TIME_PATTERNS.map(|x| (x, time_to_string, NaiveTime::parse_from_str));
+        for (pattern, to_string_fn, chrono_parse) in combined {
+            if let Ok(time) = chrono_parse(arg, pattern) {
+                return to_string_fn(time);
             }
         }
 
