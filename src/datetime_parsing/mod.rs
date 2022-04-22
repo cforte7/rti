@@ -25,7 +25,9 @@ pub mod datetime_parsing {
     }
 
     fn datetime_to_string(datetime: NaiveDateTime) -> String {
-        datetime.timestamp().to_string()
+        let local_time = Local::now();
+        let timezone_offset: &FixedOffset = local_time.offset();
+        (datetime - *timezone_offset).timestamp().to_string()
     }
 
     pub fn parse_arg(arg: &str) -> String {
@@ -195,7 +197,7 @@ mod datetime_tests {
     // Only going to test a few since the tests above are comprehensive and
     // these are all functions of the above working
     use super::datetime_parsing::parse_arg;
-    const MAY_ONE_1993_FOUR_FIFTY: &str = "736231800";
+    const MAY_ONE_1993_FOUR_FIFTY: &str = "736249800";
 
     #[test]
     fn test_multi_part() {
@@ -209,6 +211,6 @@ mod datetime_tests {
 
     #[test]
     fn test_dashes_then_24hour_time() {
-        assert_eq!(parse_arg("2022-04-22 11:40:09"), "1650627609");
+        assert_eq!(parse_arg("2022-04-22 11:40:09"), "1650645609");
     }
 }
