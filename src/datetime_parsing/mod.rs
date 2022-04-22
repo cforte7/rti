@@ -26,10 +26,9 @@ pub mod datetime_parsing {
     pub fn parse_arg(arg: &str) -> String {
         // Take an arg from the command line and try to match it to known date/time patterns
 
-        let combined = TIME_PATTERNS.map(|x| (x, time_to_string, NaiveTime::parse_from_str));
-        for (pattern, to_string_fn, chrono_parse) in combined {
-            if let Ok(time) = chrono_parse(arg, pattern) {
-                return to_string_fn(time);
+        for pattern in TIME_PATTERNS {
+            if let Ok(time) = NaiveTime::parse_from_str(arg, pattern) {
+                return time_to_string(time);
             }
         }
 
@@ -43,6 +42,14 @@ pub mod datetime_parsing {
         let datetime_patterns =
             iproduct!(DATE_PATTERNS, TIME_PATTERNS).map(|(x, y)| format!("{} {}", x, y));
         for pattern in datetime_patterns {
+            if let Ok(datetime) = NaiveDateTime::parse_from_str(arg, &pattern) {
+                return datetime_to_string(datetime);
+            }
+        }
+
+        let timedate_patterns =
+            iproduct!(TIME_PATTERNS, DATE_PATTERNS).map(|(x, y)| format!("{} {}", x, y));
+        for pattern in timedate_patterns {
             if let Ok(datetime) = NaiveDateTime::parse_from_str(arg, &pattern) {
                 return datetime_to_string(datetime);
             }
@@ -64,12 +71,17 @@ mod date_time_patterns {
         "%v",       // 1-May-1993
     ];
 
-    pub static TIME_PATTERNS: [&str; 5] = [
-        "%I:%M %P", // 01:23 PM
-        "%I:%M %p", // 01:23 pm
-        "%l:%M %P", // 1:23 PM
-        "%l:%M %p", // 1:23 pm
-        "%H:%M",    // 13:55
+    pub static TIME_PATTERNS: [&str; 10] = [
+        "%I:%M %P",    // 01:23 PM
+        "%I:%M %p",    // 01:23 pm
+        "%l:%M %P",    // 1:23 PM
+        "%l:%M %p",    // 1:23 pm
+        "%H:%M",       // 13:55
+        "%I:%M:%S %P", // 01:23:01 PM
+        "%I:%M:%S %p", // 01:23:01 pm
+        "%l:%M:%S %P", // 1:23:01 PM
+        "%l:%M:%S %p", // 1:23:01 pm
+        "%H:%M:%S",    // 13:55:01
     ];
 }
 
@@ -181,5 +193,10 @@ mod datetime_tests {
     #[test]
     fn test_slashes_date_lowercase_am() {
         assert_eq!(parse_arg("5/1/93 4:50 am"), MAY_ONE_1993_FOUR_FIFTY);
+    }
+
+    #[test]
+    fn test_dashes_then_24hour_time() {
+        assert_eq!(parse_arg("2022-04-22 11:40:09"), "1650627609");
     }
 }
