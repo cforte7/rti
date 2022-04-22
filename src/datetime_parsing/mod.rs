@@ -61,6 +61,7 @@ pub mod datetime_parsing {
         }
 
         return match arg {
+            "yesterday" => (Local::now() + Duration::days(-1)).timestamp().to_string(),
             "now" => Local::now().timestamp().to_string(),
             "tomorrow" => (Local::now() + Duration::days(1)).timestamp().to_string(),
             _ => INVALID_ARG.to_string(),
