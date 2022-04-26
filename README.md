@@ -23,7 +23,7 @@ rti 1 1650627609 2022-04-22\ 11:40:09
 There are also special keywords for `now`, `yesterday`, `tomorrow` which will give the epoch time for the current time of today, yesterday, and tomorrow respectively.
 
 ```
-// run at April 22, 2022 at 8:11AM America/Chicago
+// ran at April 22, 2022 at 8:11AM America/Chicago
 rti now yesterday tomorrow
 now => 1650633061
 yesterday => 1650546661
