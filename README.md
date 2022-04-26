@@ -14,7 +14,7 @@ This will create a globally executable command that can be used in your command 
 # Usage
 RTI takes in an arbitrary number of command line arguments, either integer unix epochs or string date/time/datetimes and converts them to the opposite.
 ```
-./rti 1 1650627609 2022-04-22\ 11:40:09
+rti 1 1650627609 2022-04-22\ 11:40:09
 1 => 1970-01-01 00:00:01
 1650627609 => 2022-04-22 11:40:09
 2022-04-22 11:40:09 => 1650627609
@@ -24,7 +24,7 @@ There are also special keywords for `now`, `yesterday`, `tomorrow` which will gi
 
 ```
 // run at April 22, 2022 at 8:11AM America/Chicago
-./rti now yesterday tomorrow
+rti now yesterday tomorrow
 now => 1650633061
 yesterday => 1650546661
 tomorrow => 1650719461
