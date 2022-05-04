@@ -1,6 +1,10 @@
 extern crate chrono;
 use chrono::format::Parsed;
 use chrono::prelude::Local;
+use chrono_tz::TZ_VARIANTS;
+
+mod config;
+use config::config::load_config;
 
 use std::env;
 
@@ -34,6 +38,11 @@ fn fmt_and_print(arg: String) {
 }
 
 fn main() {
+    for tz in TZ_VARIANTS {
+        println!("{:?}", tz);
+    }
+    let config = load_config();
+    println!("{:?}", config);
     let input: Vec<String> = env::args().collect();
     for elem in input[1..].iter() {
         fmt_and_print(elem.to_string());
