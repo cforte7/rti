@@ -14,3 +14,4 @@ categories = ["command-line-utilities"]
 [dependencies]
 chrono = "0.4"
 itertools = "0.10.2"
+chrono-tz = "0.6.1"
