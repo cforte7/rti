@@ -1,10 +1,21 @@
 pub mod config {
+    use chrono::{Date, Local};
     use chrono_tz::{ParseError, Tz};
     use confy;
     use serde::{Deserialize, Serialize};
+    use std::fmt;
     #[derive(Debug, Serialize, Deserialize)]
     pub struct MyConfig {
         pub default_timezone: Option<String>,
+    }
+    impl MyConfig {
+        pub fn get_timezone_str(self) -> String {
+            if let Some(val) = load_config().default_timezone {
+                val
+            } else {
+                String::from("Local")
+            }
+        }
     }
 
     impl ::std::default::Default for MyConfig {
@@ -14,6 +25,13 @@ pub mod config {
             }
         }
     }
+
+    impl fmt::Display for MyConfig {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            write!(f, "Timezone: {:?}", self.default_timezone)
+        }
+    }
+
     pub fn load_config() -> MyConfig {
         confy::load("rti").expect("Unable to load config.")
     }
