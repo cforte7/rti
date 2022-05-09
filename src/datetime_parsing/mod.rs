@@ -4,53 +4,58 @@ pub mod datetime_parsing {
     use super::date_time_patterns::{DATE_PATTERNS, TIME_PATTERNS};
     use crate::config::config;
     use chrono::prelude::{
-        Date, DateTime, FixedOffset, Local, NaiveDate, NaiveDateTime, NaiveTime, Utc,
+        Local, NaiveDateTime, NaiveTime, TimeZone, NaiveDate, DateTime
     };
-    use chrono::Duration;
+    use chrono::{Duration, Utc};
     use chrono_tz::Tz;
     use itertools::iproduct;
 
     pub const INVALID_ARG: &str = "Invalid Pattern"; // public for tests
 
-    fn time_to_string(time: NaiveTime) -> String {
-        // Get tz aware datetime and offset with provided time.
-        Local::today()
-            .and_time(time)
-            .unwrap()
-            .timestamp()
-            .to_string()
+    fn time_to_string(time: NaiveTime, config: &config::MyConfig) -> String {
+        match &config.default_timezone {
+            Some(val) => {
+                let tz: Tz = val.parse().unwrap();
+                let utctoday = Utc::today();
+                let naive_with_time = utctoday.and_time(time).unwrap().naive_utc();
+                let tz_aware = tz.from_local_datetime(&naive_with_time).unwrap();
+                tz_aware.timestamp().to_string()
+            }
+            None => {
+                let utc_now = Utc::today();
+                utc_now.and_time(time).unwrap().timestamp().to_string()
+            }
+        }
     }
 
-    // fn date_to_string(date: NaiveDate, config: &config::MyConfig) -> String {
-    //     // Create datetime at midnight from date, offset with local timezone
-    //     match config.default_timezone {
-    //         Some(val) => {
-    //             let tz: Tz = val.parse().unwrap();
-
-    //             let res = date.to_datetime_with_timezone(tz);
-    //             let datetime = date.and_hms(0, 0, 0);
-
-    //             let start_of_date = ddate.and_hms(0, 0, 0);
-    //             start_of_date.timestamp().to_string()
-    //         }
-    //         None => String::new(),
-    //     }
-    //     // date.with_timezone(&tz);
-    //     // let datetime = date.and_hms(0, 0, 0);
-    //     // let local_time = Local::now();
-    //     // let timezone_offset: &FixedOffset = local_time.offset();
-    //     // datetime.timestamp().to_string()
-    // }
+    fn date_to_string(date: NaiveDate, config: &config::MyConfig) -> String {
+        // Create datetime at midnight from date, offset with local timezone
+        let with_time = date.and_hms(0,0,0);
+        return match &config.default_timezone {
+            Some(val) => {
+                let tz: Tz = val.parse().unwrap();
+                let tz_aware = tz.from_local_datetime(&with_time).unwrap();
+                tz_aware.timestamp().to_string()
+            }
+            None => {
+                let utc_datetime = DateTime::<Utc>::from_utc(with_time, Utc);
+                utc_datetime.timestamp().to_string()
+            }
+        }
+    }
 
     fn datetime_to_string(datetime: NaiveDateTime, config: &config::MyConfig) -> String {
-        // match &config.default_timezone {
-        //     Some(val) => {
-        //         let tz: Tz = val.parse().unwrap();
-        //         let dt_with_timezone = datetime.with_timezone(&tz);
-        //         return datetime.timestamp().to_string();
-        //     }
-        //     None => return String::new(),
-        // };
+        match &config.default_timezone {
+            Some(val) => {
+                let tz: Tz = val.parse().unwrap();
+                let tz_aware = tz.from_local_datetime(&datetime).unwrap();
+                return tz_aware.timestamp().to_string();
+            }
+            None => {
+                let utc_datetime = DateTime::<Utc>::from_utc(datetime, Utc);
+                utc_datetime.timestamp().to_string()
+            }
+        }
     }
 
     pub fn parse_arg(arg: &str, config: &config::MyConfig) -> String {
@@ -58,15 +63,15 @@ pub mod datetime_parsing {
 
         for pattern in TIME_PATTERNS {
             if let Ok(time) = NaiveTime::parse_from_str(arg, pattern) {
-                return time_to_string(time);
+                return time_to_string(time, config);
             }
         }
 
-        // for pattern in DATE_PATTERNS {
-        //     if let Ok(date) = NaiveDate::parse_from_str(arg, pattern) {
-        //         return date_to_string(date, config);
-        //     }
-        // }
+        for pattern in DATE_PATTERNS {
+            if let Ok(date) = NaiveDate::parse_from_str(arg, pattern) {
+                return date_to_string(date, config);
+            }
+        }
 
         // for full datetime, allow any combination of the known date/time patterns
         let datetime_patterns =
@@ -91,9 +96,6 @@ pub mod datetime_parsing {
             "tomorrow" => (Local::now() + Duration::days(1)).timestamp().to_string(),
             _ => INVALID_ARG.to_string(),
         };
-
-        // if no matches found notify user we can't parse string
-        // return INVALID_ARG.to_string();
     }
 }
 

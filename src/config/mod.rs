@@ -1,5 +1,4 @@
 pub mod config {
-    use chrono::{Date, Local};
     use chrono_tz::{ParseError, Tz};
     use confy;
     use serde::{Deserialize, Serialize};
