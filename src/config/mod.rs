@@ -62,4 +62,14 @@ pub mod config {
             println!("Timezone cleared.")
         }
     }
+
+    pub fn get_timezone() -> Option<Tz> {
+        let existing_config = load_config();
+        return if let Some(val) = existing_config.default_timezone {
+            let tz: Tz = val.parse().unwrap();
+            Some(tz)
+        } else {
+            None
+        }
+    }
 }
