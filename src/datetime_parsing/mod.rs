@@ -5,9 +5,10 @@ pub mod datetime_parsing {
     use chrono::prelude::{
         Local, NaiveDateTime, NaiveTime, TimeZone, NaiveDate, DateTime
     };
+
     use chrono::format::Parsed;
     use chrono::{Duration, Utc};
-    use chrono_tz::Tz;
+    use chrono_tz::{Tz, UTC};
     use itertools::iproduct;
 
     pub const INVALID_ARG: &str = "Invalid Pattern"; // public for tests
@@ -102,23 +103,15 @@ pub mod datetime_parsing {
         // This would be much cleaner as a Trait object but you can't do this
         // with TimeZone (chrono limitation)
         // https://github.com/chronotope/chrono/issues/432
-        match tz {
-            Some(val) => {
-                parsed
-                    .to_datetime_with_timezone(&val)
-                    .unwrap()
-                    .format(DATETIME_PARSE_FORMAT)
-                    .to_string()
-            }
-            None => {
-                let local_offset = Local::now();
-                parsed
-                    .to_datetime_with_timezone(&local_offset.timezone())
-                    .unwrap()
-                    .format(DATETIME_PARSE_FORMAT)
-                    .to_string()
-            }
-        }
+        let parsed_tz = match tz {
+            Some(val) =>  val,
+            None => UTC
+        };
+        parsed
+            .to_datetime_with_timezone(&parsed_tz)
+            .unwrap()
+            .format(DATETIME_PARSE_FORMAT)
+            .to_string()
     }
 }
 
@@ -424,5 +417,33 @@ mod with_tz_epoch_to_datetime {
         const OCT_TEN_TWENTY_TWO: i64 = 1665378000;
         assert_eq!(epoch_to_datetime(OCT_TEN_TWENTY_TWO, CHICAGO_TZ),
                    "10-10-2022 00:00:00");
+    }
+}
+
+#[cfg(test)]
+mod utc_epoch_to_datetime {
+    // Only going to test a few since the tests above are comprehensive and
+    // these are all functions of the above working
+    use super::datetime_parsing::epoch_to_datetime;
+    #[test]
+    fn test_epoch_before_ds_time() {
+        const JAN_TEN_TWENTY_TWO: i64 = 1641794400;
+        assert_eq!(epoch_to_datetime(JAN_TEN_TWENTY_TWO, None),
+                   "01-10-2022 06:00:00");
+    }
+
+    #[test]
+    fn test_epoch_during_ds_time() {
+        const MAY_ONE_1993_FOUR_FIFTY: i64 = 736249800;
+        assert_eq!(epoch_to_datetime(MAY_ONE_1993_FOUR_FIFTY, None),
+                   "05-01-1993 09:50:00");
+    }
+
+
+    #[test]
+    fn test_epoch_after_ds_time() {
+        const NOV_TEN_TWENTY_TWO: i64 = 1668060000;
+        assert_eq!(epoch_to_datetime(NOV_TEN_TWENTY_TWO, None),
+                   "11-10-2022 06:00:00");
     }
 }
