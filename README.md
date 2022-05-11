@@ -14,7 +14,7 @@ This will create a globally executable command that can be used in your command 
 # Usage
 RTI takes in an arbitrary number of command line arguments, either integer unix epochs or string date/time/datetimes and converts them to the opposite.
 ```
-rti 1 1650627609 2022-04-22\ 11:40:09
+$ rti 1 1650627609 2022-04-22\ 11:40:09
 1 => 01-01-1970 00:00:01
 1650627609 => 04-22-2022 11:40:09
 2022-04-22 11:40:09 => 1650627609
@@ -25,7 +25,7 @@ There are also special keywords for `now`, `yesterday`, `tomorrow` which will gi
 
 ```
 // ran at May 10, 2022 at 5:25PM UTC time
-rti now yesterday tomorrow
+$ rti now yesterday tomorrow
 now => 1652203517
 yesterday => 1652117117
 tomorrow => 1652289917
@@ -38,13 +38,13 @@ If no timezone is set in your local config or by environment variable, UTC will 
 ```
 
 // Set custom timezone in config
-rti set-tz America/New_York
+$ rti set-tz America/New_York
 
 // clear timezone config
-rti clear-tz
+$ rti clear-tz
 
 // using TIMEZONE environment variable
-TIMEZONE=America/Denver rti now
+$ TIMEZONE=America/Denver rti now
 ```
 
 RTI timezones are set in the following precedence:
@@ -52,8 +52,24 @@ RTI timezones are set in the following precedence:
 2. Config
 3. UTC if no config or Env variable is present
 
+## Custom Parsing Tokens
+RTI comes with preset parsing patterns, but you can also add your own datetime tokens to parse. 
+Note that the tokens must be full datetime values (not just time or just date).
+
+See https://docs.rs/chrono/0.4.0/chrono/format/strftime/index.html for details on the syntax.
+
+```
+$ rti add-token "%d-%m-%y %H:%M"
+Custom Token added
+
+$ rti view-tokens
+Custom datetime tokens:
+%d-%m-%y %H:%M
+
+$ rti remove-token "%d-%m-%y %H:%M"
+Token removed if it existed: %d-%m-%y %H:%M
+```
 # Limitations (Planned Features)
 
 Currently RTI does not have support for the following (but are planned to be added over time):
-- Set custom datetime parse tokens.
 - Copy output to clipboard
