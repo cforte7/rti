@@ -121,17 +121,27 @@ pub mod config {
     pub fn remove_custom_token(to_remove: String) {
         let existing_tokens: Vec<String> = match load_config().custom_parsing_tokens {
             Some(tokens) => tokens,
-            None=>Vec::new()
+            None=>{
+                println!("No tokens to remove.");
+                return;
+            }
         };
-        let filtered_tokens = existing_tokens
+        let filtered_tokens: Vec<String> = existing_tokens
             .into_iter()
             .filter(|val| val!= &to_remove)
             .collect();
-        let existing_config = load_config();
-        let new_config = MyConfig {
-            custom_parsing_tokens: Some(filtered_tokens),
-            ..existing_config
+
+        let tokens_to_store = match filtered_tokens.len() {
+            0 => None,
+            _ => Some(filtered_tokens)
         };
+
+        let new_config = MyConfig {
+            custom_parsing_tokens: tokens_to_store,
+            ..load_config()
+        };
+
+
         if let Ok(_) = confy::store("rti", new_config) {
             println!("Token removed if it existed: {}", to_remove);
         }
