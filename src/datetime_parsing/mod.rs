@@ -33,8 +33,14 @@ pub mod datetime_parsing {
         return tz_aware.timestamp().to_string();
     }
 
-    pub fn parse_arg(arg: &str, tz: &Tz) -> String {
+    pub fn parse_arg(arg: &str, tz: &Tz, custom_tokens: &Vec<String>) -> String {
         // Take an arg from the command line and try to match it to known date/time patterns
+
+        for pattern in custom_tokens {
+            if let Ok(datetime) = NaiveDateTime::parse_from_str(arg, &pattern) {
+                return datetime_to_epoch(datetime, tz);
+            }
+        }
 
         for pattern in TIME_PATTERNS {
             if let Ok(time) = NaiveTime::parse_from_str(arg, pattern) {
