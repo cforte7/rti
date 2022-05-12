@@ -69,7 +69,4 @@ Custom datetime tokens:
 $ rti remove-token "%d-%m-%y %H:%M"
 Token removed if it existed: %d-%m-%y %H:%M
 ```
-# Limitations (Planned Features)
 
-Currently RTI does not have support for the following (but are planned to be added over time):
-- Copy output to clipboard
