@@ -9,7 +9,7 @@ Currently you can either clone the repo and compile binaries yourself, or downlo
 cargo install rti
 ```
 
-This will create a globally executable command that can be used in your command line. **Note:** This has only been tested on macOS.
+This will create a globally executable command that can be used in your command line. **Note:** This has only been tested on macOS and Windows 10.
 
 # Usage
 RTI takes in an arbitrary number of command line arguments, either integer unix epochs or string date/time/datetimes and converts them to the opposite.
