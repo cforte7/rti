@@ -1,5 +1,5 @@
 # RTI
-RTI (Rusty Time Interpreter) is command line tool for converting between unix epoch time and date/time strings. It is written and Rust and should run on any platform.
+RTI (Rusty Time Interpreter) is a command line tool for converting between unix epoch time and date/time strings. It is written in Rust and should run on any platform.
 
 This tool was inspired by the extremely useful [epoch-echo](https://github.com/ainsleymcgrath/epoch-echo) by Ainsley Mcgrath. While the tool is fantastic and has more functionality than RTI currently, the main issues were speed and portability which inspired me to write this in Rust.
 
