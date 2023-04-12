@@ -429,11 +429,10 @@ mod utc_epoch_to_datetime {
 }
 
 mod test_custom_datetime_parsing {
-    use super::datetime_parsing::parse_arg;
-    use chrono_tz::UTC;
-
     #[test]
     fn test_custom_datetime_parsing() {
+        use super::datetime_parsing::parse_arg;
+        use chrono_tz::UTC;
         let vec_with_token: Vec<String> = ["%d-%m-%y %H:%M".to_string()].to_vec();
         assert_eq!(parse_arg("24-5-93 13:55", &UTC, &vec_with_token), "738251700");
     }
