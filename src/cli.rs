@@ -1,4 +1,6 @@
-fn help() {
+use crate::OkOrStringError;
+
+pub fn help() -> OkOrStringError {
     println!("RTI converts Unix epoch time to a human readable format and vice versa.");
     println!("Enter values to convert separated by a space.\n");
     println!("Additional commands:");
@@ -8,6 +10,7 @@ fn help() {
     println!("    add-token - Add a custom parsing token. Uses first argument after add-token. See https://docs.rs/chrono/0.4.0/chrono/format/strftime/index.html for syntax.");
     println!("    remove-token - Remove a custom parsing token. No changes made if the token doesn't exist.");
     println!("    view-tokens - See a list of stored custom parsing tokens.");
+    Ok(None)
 }
 
 pub struct ParsedInput {
@@ -41,12 +44,11 @@ pub fn parse_input(input: Vec<String>) -> Result<ParsedInput, &'static str> {
         Ok(val) => Some(val),
         Err(_) => None,
     };
-    let mut everything_else: Vec<String> = vec![];
-    let other_args = match input.len() > 3 {
-        True => {
-            input[2..].iter().map(|x| x.to_owned()).collect()
-        },
-        False => vec![]
+    let other_args;
+    if input.len() > 3 {
+        other_args = input[2..].iter().map(|x| x.to_owned()).collect();
+    } else{
+        other_args = vec![];
     };
     return Ok(ParsedInput {
         action,
