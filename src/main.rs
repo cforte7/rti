@@ -35,17 +35,16 @@ fn fmt_and_print(arg: String, tz: &Tz, custom_tokens: &Vec<String>) {
 
 fn execute_action(input: ParsedInput) -> OkOrStringError {
     match input.action {
-        Action::Help => help(),
-        Action::SetTz => set_tz_config(input.second_arg),
-        Action::ClearTz => clear_tz_config(),
-        Action::AddToken => add_custom_token(input.second_arg),
-        Action::RemoveToken => remove_custom_token(input.second_arg),
-        Action::ViewTokens => view_tokens(),
+        Some(Action::Help) => help(),
+        Some(Action::SetTz) => set_tz_config(input.second_arg),
+        Some(Action::ClearTz) => clear_tz_config(),
+        Some(Action::AddToken) => add_custom_token(input.second_arg),
+        Some(Action::RemoveToken) => remove_custom_token(input.second_arg),
+        Some(Action::ViewTokens) => view_tokens(),
         _ => {
             let tz: Tz = get_timezone();
             let custom_tokens: Vec<String> = get_custom_tokens();
-            let combined_args = input.get_non_action_args();
-            for elem in combined_args {
+            for elem in input.date_args {
                 fmt_and_print(elem.to_string(), &tz, &custom_tokens);
             }
             println!("Timezone: {}", tz);
@@ -55,16 +54,22 @@ fn execute_action(input: ParsedInput) -> OkOrStringError {
 
 }
 
-fn main() -> Result<(), String> {
+fn main() {
     let args: Vec<String> = env::args().collect();
     let input = match parse_input(args) {
         Ok(val) => val,
         Err(e) => {
             println!("Error: {}", e);
-            return Err("".to_string());
+            return;
         }
     };
 
-    execute_action(input)?;
-    Ok(())
+    match execute_action(input) {
+        Ok(resp) => {
+            if let Some(msg) = resp {
+                println!("{}", msg);
+            }
+        },
+        Err(e) => println!("Error: {}", e)
+    }
 }

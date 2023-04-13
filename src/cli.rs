@@ -14,46 +14,41 @@ pub fn help() -> OkOrStringError {
 }
 
 pub struct ParsedInput {
-    pub action: Action,
+    pub action: Option<Action>,
     pub second_arg: Option<String>,
-    pub other_args: Vec<String>
+    pub date_args: Vec<String>
 }
 
-impl ParsedInput {
-    pub fn get_non_action_args(&self) -> Vec<String> {
-        // Turn second_arg and other_args into a single Vec.
-        let mut args = match &self.second_arg {
-            Some(arg) => vec![arg.to_owned()],
-            None => vec![]
-        };
-        args.append(&mut self.other_args.clone());
-        args
+
+pub fn parse_input(input: Vec<String>) -> Result<ParsedInput, String> {
+    let input_len = input.len();
+    if input_len == 1 {
+        return Err("Must include at least one argument!".to_string());
     }
-}
-
-pub fn parse_input(input: Vec<String>) -> Result<ParsedInput, &'static str> {
-    let action: Action = match input[1].parse() {
+    let maybe_action = match input[1].parse() {
         Ok(val) =>  {
-            let a = Action::from_string(val)?;
-            a
+            Action::from_string(val)
         },
-        Err(_) => return Err("Must include at least one argument!")
+        Err(_) => return Err("Error parsing arg.".to_string())
     };
 
-    let second_arg: Option<String> = match input[2].parse() {
-        Ok(val) => Some(val),
-        Err(_) => None,
+    let second_arg : Option<String> = match input.get(2) {
+        Some(val) => Some(val.clone()),
+        None => None,
     };
-    let other_args;
-    if input.len() > 3 {
-        other_args = input[2..].iter().map(|x| x.to_owned()).collect();
-    } else{
-        other_args = vec![];
+
+    // if we have an action, we aren't doing any datetime parsing
+    // so we just give empty list, otherwise all of our args
+    // are datetimes to parse
+    let date_args = match maybe_action {
+        Some(_) => vec![],
+        None => input[1..].iter().map(|x| x.to_owned()).collect(),
     };
+
     return Ok(ParsedInput {
-        action,
+        action: maybe_action,
         second_arg,
-        other_args
+        date_args
     });
 }
 
@@ -68,15 +63,15 @@ pub enum Action {
 
 
 impl Action {
-    fn from_string(input: String) -> Result<Action, &'static str> {
+    fn from_string(input: String) -> Option<Action> {
         match input.as_str() {
-            "help"  => Ok(Action::Help),
-            "set-tz"  => Ok(Action::SetTz),
-            "clear-tz"  => Ok(Action::ClearTz),
-            "add-token" => Ok(Action::AddToken),
-            "remove-token" => Ok(Action::RemoveToken),
-            "view-tokens" => Ok(Action::ViewTokens),
-            _  => Err("Invalid action"),
+            "help"  => Some(Action::Help),
+            "set-tz"  => Some(Action::SetTz),
+            "clear-tz"  => Some(Action::ClearTz),
+            "add-token" => Some(Action::AddToken),
+            "remove-token" => Some(Action::RemoveToken),
+            "view-tokens" => Some(Action::ViewTokens),
+            _  => None,
         }
     }
 }
