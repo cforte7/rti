@@ -7,33 +7,48 @@ use chrono::prelude::{
 };
 
 use chrono::format::Parsed;
-use chrono::{Duration, Utc};
+use chrono::{Duration, Utc, LocalResult};
 use chrono_tz::{Tz};
 use itertools::iproduct;
 
 pub const INVALID_ARG: &str = "Invalid Pattern"; // public for tests
 
-fn time_to_epoch(time: NaiveTime, tz: &Tz) -> String {
-        let utctoday = Utc::today();
-        let naive_with_time = utctoday.and_time(time).unwrap().naive_utc();
-        let tz_aware = (*tz).from_local_datetime(&naive_with_time).unwrap();
-        tz_aware.timestamp().to_string()
+fn time_to_epoch(time: NaiveTime, tz: &Tz) -> Result<String, String> {
+        let utctoday = Utc::now().date_naive();
+        let naive_with_time = utctoday.and_time(time);
+        let tz_aware_result = (*tz).from_local_datetime(&naive_with_time);
+        let tz_aware = match tz_aware_result {
+            LocalResult::Single(val) => val,
+            _ => return Err(INVALID_ARG.to_string())
+        };
+        Ok(tz_aware.timestamp().to_string())
 }
 
 
-fn date_to_epoch(date: NaiveDate, tz: &Tz) -> String {
+fn date_to_epoch(date: NaiveDate, tz: &Tz) -> Result<String, String> {
     // Create datetime at midnight from date, offset with timezone
-    let with_time = date.and_hms(0,0,0);
-    let tz_aware = (*tz).from_local_datetime(&with_time).unwrap();
-    tz_aware.timestamp().to_string()
+    let with_time = date.and_hms_opt(0,0,0);
+    let tz_aware_result = match with_time {
+        Some(val) => (*tz).from_local_datetime(&val),
+        None => return Err("Error parsing".to_string())
+    };
+    let tz_aware = match tz_aware_result {
+        LocalResult::Single(val) => val,
+        _ => return Err(INVALID_ARG.to_string())
+    };
+    Ok(tz_aware.timestamp().to_string())
 }
 
-fn datetime_to_epoch(datetime: NaiveDateTime, tz: &Tz) -> String {
-    let tz_aware = (*tz).from_local_datetime(&datetime).unwrap();
-    tz_aware.timestamp().to_string()
+fn datetime_to_epoch(datetime: NaiveDateTime, tz: &Tz) -> Result<String, String> {
+    let tz_aware_result = (*tz).from_local_datetime(&datetime);
+    let tz_aware = match tz_aware_result {
+        LocalResult::Single(val) => val,
+        _ => return Err(INVALID_ARG.to_string())
+    };
+    Ok(tz_aware.timestamp().to_string())
 }
 
-pub fn parse_arg(arg: &str, tz: &Tz, custom_tokens: &Vec<String>) -> String {
+pub fn parse_arg(arg: &str, tz: &Tz, custom_tokens: &Vec<String>) -> Result<String, String> {
     // Take an arg from the command line and try to match it to known date/time patterns
 
     for pattern in custom_tokens {
@@ -70,24 +85,26 @@ pub fn parse_arg(arg: &str, tz: &Tz, custom_tokens: &Vec<String>) -> String {
         }
     }
 
-    match arg {
+    Ok(match arg {
         "yesterday" => (Local::now() + Duration::days(-1)).timestamp().to_string(),
         "now" => Local::now().timestamp().to_string(),
         "tomorrow" => (Local::now() + Duration::days(1)).timestamp().to_string(),
         _ => INVALID_ARG.to_string(),
-    }
+    })
 }
 
 const DATETIME_PARSE_FORMAT: &str = "%m-%d-%Y %H:%M:%S";
-pub fn epoch_to_datetime(epoch: i64, tz: &Tz) -> String {
+pub fn epoch_to_datetime(epoch: i64, tz: &Tz) -> Result<String, String> {
     // take in epoch time and return datetime as timezone adjusted string.
     let mut parsed = Parsed::new();
     parsed.set_timestamp(epoch).unwrap();
-    parsed
-        .to_datetime_with_timezone(tz)
-        .unwrap()
-        .format(DATETIME_PARSE_FORMAT)
-        .to_string()
+    let parsed_with_timezone = parsed
+        .to_datetime_with_timezone(tz);
+
+    match parsed_with_timezone {
+        Ok(val) => Ok(val.format(DATETIME_PARSE_FORMAT).to_string()),
+        Err(e) => Err(format!("Error parsing epoch: {}", e))
+    }
 }
 
 
@@ -129,27 +146,27 @@ mod utc_time_tests {
     const EMPTY_VEC: Vec<String> = Vec::new();
     #[test]
     fn test_24_hour_time() {
-        assert_ne!(parse_arg("13:55", &UTC, &EMPTY_VEC), INVALID_ARG);
+        assert_ne!(parse_arg("13:55", &UTC, &EMPTY_VEC), Err(INVALID_ARG.to_string()));
     }
 
     #[test]
     fn test_padded_hour_uppercase() {
-        assert_ne!(parse_arg("01:23 PM", &UTC, &EMPTY_VEC), INVALID_ARG);
+        assert_ne!(parse_arg("01:23 PM", &UTC, &EMPTY_VEC), Err(INVALID_ARG.to_string()));
     }
 
     #[test]
     fn test_padded_hour_lowercase() {
-        assert_ne!(parse_arg("01:23 pm", &UTC, &EMPTY_VEC), INVALID_ARG);
+        assert_ne!(parse_arg("01:23 pm", &UTC, &EMPTY_VEC), Err(INVALID_ARG.to_string()));
     }
 
     #[test]
     fn test_not_padded_hour_lowercase() {
-        assert_ne!(parse_arg("1:23 pm", &UTC, &EMPTY_VEC), INVALID_ARG);
+        assert_ne!(parse_arg("1:23 pm", &UTC, &EMPTY_VEC), Err(INVALID_ARG.to_string()));
     }
 
     #[test]
     fn test_not_padded_hour_uppercase() {
-        assert_ne!(parse_arg("1:23 PM", &UTC, &EMPTY_VEC), INVALID_ARG);
+        assert_ne!(parse_arg("1:23 PM", &UTC, &EMPTY_VEC), Err(INVALID_ARG.to_string()));
     }
 }
 
@@ -166,27 +183,27 @@ mod with_tz_time_tests {
     const EMPTY_VEC: Vec<String> = Vec::new();
     #[test]
     fn test_24_hour_time() {
-        assert_ne!(parse_arg("13:55", &Central, &EMPTY_VEC), INVALID_ARG);
+        assert_ne!(parse_arg("13:55", &Central, &EMPTY_VEC), Err(INVALID_ARG.to_string()));
     }
 
     #[test]
     fn test_padded_hour_uppercase() {
-        assert_ne!(parse_arg("01:23 PM", &Central, &EMPTY_VEC), INVALID_ARG);
+        assert_ne!(parse_arg("01:23 PM", &Central, &EMPTY_VEC), Err(INVALID_ARG.to_string()));
     }
 
     #[test]
     fn test_padded_hour_lowercase() {
-        assert_ne!(parse_arg("01:23 pm", &Central, &EMPTY_VEC), INVALID_ARG);
+        assert_ne!(parse_arg("01:23 pm", &Central, &EMPTY_VEC), Err(INVALID_ARG.to_string()));
     }
 
     #[test]
     fn test_not_padded_hour_lowercase() {
-        assert_ne!(parse_arg("1:23 pm", &Central, &EMPTY_VEC), INVALID_ARG);
+        assert_ne!(parse_arg("1:23 pm", &Central, &EMPTY_VEC), Err(INVALID_ARG.to_string()));
     }
 
     #[test]
     fn test_not_padded_hour_uppercase() {
-        assert_ne!(parse_arg("1:23 PM", &Central, &EMPTY_VEC), INVALID_ARG);
+        assert_ne!(parse_arg("1:23 PM", &Central, &EMPTY_VEC), Err(INVALID_ARG.to_string()));
     }
 }
 
@@ -199,36 +216,36 @@ mod utc_date_tests {
     #[test]
     fn test_dashes_long_year_no_pad() {
         // "%m-%d-%Y"
-        assert_eq!(parse_arg("5-1-1993", &UTC, &EMPTY_VEC), MAY_ONE_1993);
+        assert_eq!(parse_arg("5-1-1993", &UTC, &EMPTY_VEC), Ok(MAY_ONE_1993.to_string()));
     }
 
     #[test]
     fn test_dashes_long_year_padded() {
         // "%m-%d-%Y"
-        assert_eq!(parse_arg("05-01-1993", &UTC, &EMPTY_VEC), MAY_ONE_1993);
+        assert_eq!(parse_arg("05-01-1993", &UTC, &EMPTY_VEC), Ok(MAY_ONE_1993.to_string()));
     }
 
     #[test]
     fn test_dashes_short_year_no_pad() {
         // "%m-%d-%y"
-        assert_eq!(parse_arg("5-1-93", &UTC, &EMPTY_VEC), MAY_ONE_1993);
+        assert_eq!(parse_arg("5-1-93", &UTC, &EMPTY_VEC), Ok(MAY_ONE_1993.to_string()));
     }
 
     #[test]
     fn test_dashes_short_year_padded() {
         // "%m-%d-%y"
-        assert_eq!(parse_arg("05-01-93", &UTC, &EMPTY_VEC), MAY_ONE_1993);
+        assert_eq!(parse_arg("05-01-93", &UTC, &EMPTY_VEC), Ok(MAY_ONE_1993.to_string()));
     }
 
     #[test]
     fn test_slashes_short_year() {
         // %D
-        assert_eq!(parse_arg("5/1/93", &UTC, &EMPTY_VEC), MAY_ONE_1993)
+        assert_eq!(parse_arg("5/1/93", &UTC, &EMPTY_VEC), Ok(MAY_ONE_1993.to_string()));
     }
     #[test]
     fn test_slashes_long_year() {
         // "%m/%d/%Y"
-        assert_eq!(parse_arg("5/1/1993", &UTC, &EMPTY_VEC), MAY_ONE_1993)
+        assert_eq!(parse_arg("5/1/1993", &UTC, &EMPTY_VEC), Ok(MAY_ONE_1993.to_string()));
     }
 
     // also test in January before daylight savings time
@@ -236,19 +253,19 @@ mod utc_date_tests {
     #[test]
     fn test_dashes_year_padded_month_day() {
         // "%F"
-        assert_eq!(parse_arg("1993-01-03", &UTC, &EMPTY_VEC), JAN_THIRD_NINETY_THREE)
+        assert_eq!(parse_arg("1993-01-03", &UTC, &EMPTY_VEC), Ok(JAN_THIRD_NINETY_THREE.to_string()))
     }
 
     #[test]
     fn test_dashes_year_month_day() {
         // "%F"
-        assert_eq!(parse_arg("1993-1-3", &UTC, &EMPTY_VEC), JAN_THIRD_NINETY_THREE)
+        assert_eq!(parse_arg("1993-1-3", &UTC, &EMPTY_VEC), Ok(JAN_THIRD_NINETY_THREE.to_string()))
     }
 
     #[test]
     fn test_dashes_day_word_month_year() {
         // "%F"
-        assert_eq!(parse_arg("3-Jan-1993", &UTC, &EMPTY_VEC), JAN_THIRD_NINETY_THREE)
+        assert_eq!(parse_arg("3-Jan-1993", &UTC, &EMPTY_VEC), Ok(JAN_THIRD_NINETY_THREE.to_string()))
     }
 }
 
@@ -263,36 +280,36 @@ mod with_tz_date_tests {
     fn test_dashes_long_year_no_pad() {
         // "%m-%d-%Y"
 
-        assert_eq!(parse_arg("5-1-1993", &Central, &EMPTY_VEC), MAY_ONE_1993);
+        assert_eq!(parse_arg("5-1-1993", &Central, &EMPTY_VEC), Ok(MAY_ONE_1993.to_string()))
     }
 
     #[test]
     fn test_dashes_long_year_padded() {
         // "%m-%d-%Y"
-        assert_eq!(parse_arg("05-01-1993", &Central, &EMPTY_VEC), MAY_ONE_1993);
+        assert_eq!(parse_arg("05-01-1993", &Central, &EMPTY_VEC), Ok(MAY_ONE_1993.to_string()))
     }
 
     #[test]
     fn test_dashes_short_year_no_pad() {
         // "%m-%d-%y"
-        assert_eq!(parse_arg("5-1-93", &Central, &EMPTY_VEC), MAY_ONE_1993);
+        assert_eq!(parse_arg("5-1-93", &Central, &EMPTY_VEC), Ok(MAY_ONE_1993.to_string()))
     }
 
     #[test]
     fn test_dashes_short_year_padded() {
         // "%m-%d-%y"
-        assert_eq!(parse_arg("05-01-93", &Central, &EMPTY_VEC), MAY_ONE_1993);
+        assert_eq!(parse_arg("05-01-93", &Central, &EMPTY_VEC), Ok(MAY_ONE_1993.to_string()))
     }
 
     #[test]
     fn test_slashes_short_year() {
         // %D
-        assert_eq!(parse_arg("5/1/93", &Central, &EMPTY_VEC), MAY_ONE_1993)
+        assert_eq!(parse_arg("5/1/93", &Central, &EMPTY_VEC), Ok(MAY_ONE_1993.to_string()))
     }
     #[test]
     fn test_slashes_long_year() {
         // "%m/%d/%Y"
-        assert_eq!(parse_arg("5/1/1993", &Central, &EMPTY_VEC), MAY_ONE_1993)
+        assert_eq!(parse_arg("5/1/1993", &Central, &EMPTY_VEC), Ok(MAY_ONE_1993.to_string()))
     }
 
     // also test in January before daylight savings time
@@ -300,19 +317,19 @@ mod with_tz_date_tests {
     #[test]
     fn test_dashes_year_padded_month_day() {
         // "%F"
-        assert_eq!(parse_arg("1993-01-03", &Central, &EMPTY_VEC), JAN_THIRD_NINETY_THREE)
+        assert_eq!(parse_arg("1993-01-03", &Central, &EMPTY_VEC), Ok(JAN_THIRD_NINETY_THREE.to_string()))
     }
 
     #[test]
     fn test_dashes_year_month_day() {
         // "%F"
-        assert_eq!(parse_arg("1993-1-3", &Central, &EMPTY_VEC), JAN_THIRD_NINETY_THREE)
+        assert_eq!(parse_arg("1993-1-3", &Central, &EMPTY_VEC), Ok(JAN_THIRD_NINETY_THREE.to_string()))
     }
 
     #[test]
     fn test_dashes_day_word_month_year() {
         // "%F"
-        assert_eq!(parse_arg("3-Jan-1993", &Central, &EMPTY_VEC), JAN_THIRD_NINETY_THREE)
+        assert_eq!(parse_arg("3-Jan-1993", &Central, &EMPTY_VEC), Ok(JAN_THIRD_NINETY_THREE.to_string()))
     }
 }
 
@@ -326,17 +343,17 @@ mod utc_datetime_tests {
     const EMPTY_VEC: Vec<String> = Vec::new();
     #[test]
     fn test_multi_part() {
-        assert_eq!(parse_arg("1-May-1993 4:50 AM", &UTC, &EMPTY_VEC), MAY_ONE_1993_FOUR_FIFTY);
+        assert_eq!(parse_arg("1-May-1993 4:50 AM", &UTC, &EMPTY_VEC), Ok(MAY_ONE_1993_FOUR_FIFTY.to_string()));
     }
 
     #[test]
     fn test_slashes_date_lowercase_am() {
-        assert_eq!(parse_arg("5/1/93 4:50 am", &UTC, &EMPTY_VEC), MAY_ONE_1993_FOUR_FIFTY);
+        assert_eq!(parse_arg("5/1/93 4:50 am", &UTC, &EMPTY_VEC), Ok(MAY_ONE_1993_FOUR_FIFTY.to_string()));
     }
 
     #[test]
     fn test_dashes_then_24hour_time() {
-        assert_eq!(parse_arg("2022-04-22 13:40:09", &UTC, &EMPTY_VEC), "1650634809");
+        assert_eq!(parse_arg("2022-04-22 13:40:09", &UTC, &EMPTY_VEC), Ok("1650634809".to_string()));
     }
 }
 
@@ -352,17 +369,17 @@ mod with_tz_datetime_tests {
 
     #[test]
     fn test_multi_part() {
-        assert_eq!(parse_arg("1-May-1993 4:50 AM", &Central, &EMPTY_VEC), MAY_ONE_1993_FOUR_FIFTY);
+        assert_eq!(parse_arg("1-May-1993 4:50 AM", &Central, &EMPTY_VEC), Ok(MAY_ONE_1993_FOUR_FIFTY.to_string()));
     }
 
     #[test]
     fn test_slashes_date_lowercase_am() {
-        assert_eq!(parse_arg("5/1/93 4:50 am", &Central, &EMPTY_VEC), MAY_ONE_1993_FOUR_FIFTY);
+        assert_eq!(parse_arg("5/1/93 4:50 am", &Central, &EMPTY_VEC), Ok(MAY_ONE_1993_FOUR_FIFTY.to_string()));
     }
 
     #[test]
     fn test_dashes_then_24hour_time() {
-        assert_eq!(parse_arg("2022-04-22 13:40:09", &Central, &EMPTY_VEC), "1650652809");
+        assert_eq!(parse_arg("2022-04-22 13:40:09", &Central, &EMPTY_VEC), Ok("1650652809".to_string()));
     }
 }
 
@@ -379,14 +396,14 @@ mod with_tz_epoch_to_datetime {
     fn test_epoch_before_ds_time() {
         const JAN_TEN_TWENTY_TWO: i64 = 1641794400;
         assert_eq!(epoch_to_datetime(JAN_TEN_TWENTY_TWO, &Central),
-                   "01-10-2022 00:00:00");
+                   Ok("01-10-2022 00:00:00".to_string()));
     }
 
     #[test]
     fn test_epoch_during_ds_time() {
         const MAY_ONE_1993_FOUR_FIFTY: i64 = 736249800;
         assert_eq!(epoch_to_datetime(MAY_ONE_1993_FOUR_FIFTY, &Central),
-                   "05-01-1993 04:50:00");
+                   Ok("05-01-1993 04:50:00".to_string()));
     }
 
 
@@ -394,7 +411,7 @@ mod with_tz_epoch_to_datetime {
     fn test_epoch_after_ds_time() {
         const OCT_TEN_TWENTY_TWO: i64 = 1665378000;
         assert_eq!(epoch_to_datetime(OCT_TEN_TWENTY_TWO, &Central),
-                   "10-10-2022 00:00:00");
+                   Ok("10-10-2022 00:00:00".to_string()));
     }
 }
 
@@ -409,14 +426,14 @@ mod utc_epoch_to_datetime {
     fn test_epoch_before_ds_time() {
         const JAN_TEN_TWENTY_TWO: i64 = 1641794400;
         assert_eq!(epoch_to_datetime(JAN_TEN_TWENTY_TWO, &UTC),
-                   "01-10-2022 06:00:00");
+                   Ok("01-10-2022 06:00:00".to_string()));
     }
 
     #[test]
     fn test_epoch_during_ds_time() {
         const MAY_ONE_1993_FOUR_FIFTY: i64 = 736249800;
         assert_eq!(epoch_to_datetime(MAY_ONE_1993_FOUR_FIFTY, &UTC),
-                   "05-01-1993 09:50:00");
+                    Ok("05-01-1993 09:50:00".to_string()));
     }
 
 
@@ -424,7 +441,7 @@ mod utc_epoch_to_datetime {
     fn test_epoch_after_ds_time() {
         const NOV_TEN_TWENTY_TWO: i64 = 1668060000;
         assert_eq!(epoch_to_datetime(NOV_TEN_TWENTY_TWO, &UTC),
-                   "11-10-2022 06:00:00");
+                   Ok("11-10-2022 06:00:00".to_string()));
     }
 }
 
@@ -434,7 +451,7 @@ mod test_custom_datetime_parsing {
         use super::parse_arg;
         use chrono_tz::UTC;
         let vec_with_token: Vec<String> = ["%d-%m-%y %H:%M".to_string()].to_vec();
-        assert_eq!(parse_arg("24-5-93 13:55", &UTC, &vec_with_token), "738251700");
+        assert_eq!(parse_arg("24-5-93 13:55", &UTC, &vec_with_token), Ok("738251700".to_string()));
     }
 
 }

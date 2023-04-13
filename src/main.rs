@@ -27,7 +27,10 @@ fn fmt_and_print(arg: String, tz: &Tz, custom_tokens: &Vec<String>) {
         Err(_) => parse_arg(&arg, tz, custom_tokens),
     };
 
-    println!("{} => {}", arg, parsed_value);
+    match parsed_value {
+        Ok(val) =>  println!("{} => {}", arg, val),
+        Err(_) => println!("Unable to parse value: {}", arg)
+    }
 }
 
 

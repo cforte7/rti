@@ -12,7 +12,7 @@ keywords = ["time", "cli"]
 categories = ["command-line-utilities"]
 
 [dependencies]
-chrono = "0.4.19"
+chrono = "0.4.24"
 chrono-tz = "0.6.1"
 confy = "0.4.0"
 serde = {version= "1.0.137", features = ["derive"] }
