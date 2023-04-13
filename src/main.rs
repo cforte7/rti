@@ -13,7 +13,7 @@ use config::{
 use std::env;
 
 mod datetime_parsing;
-use datetime_parsing::datetime_parsing::{parse_arg, epoch_to_datetime};
+use datetime_parsing::{parse_arg, epoch_to_datetime};
 
 mod cli;
 use cli::{parse_input, help, Action, ParsedInput};
@@ -27,10 +27,8 @@ fn fmt_and_print(arg: String, tz: &Tz, custom_tokens: &Vec<String>) {
         Err(_) => parse_arg(&arg, tz, custom_tokens),
     };
 
-    println!("{}", format!("{} => {}", arg, parsed_value));
+    println!("{} => {}", arg, parsed_value);
 }
-
-
 
 
 fn execute_action(input: ParsedInput) -> OkOrStringError {

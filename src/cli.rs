@@ -32,10 +32,7 @@ pub fn parse_input(input: Vec<String>) -> Result<ParsedInput, String> {
         Err(_) => return Err("Error parsing arg.".to_string())
     };
 
-    let second_arg : Option<String> = match input.get(2) {
-        Some(val) => Some(val.clone()),
-        None => None,
-    };
+    let second_arg : Option<String> = input.get(2).cloned();
 
     // if we have an action, we aren't doing any datetime parsing
     // so we just give empty list, otherwise all of our args
@@ -45,11 +42,11 @@ pub fn parse_input(input: Vec<String>) -> Result<ParsedInput, String> {
         None => input[1..].iter().map(|x| x.to_owned()).collect(),
     };
 
-    return Ok(ParsedInput {
+    Ok(ParsedInput {
         action: maybe_action,
         second_arg,
         date_args
-    });
+    })
 }
 
 pub enum Action {

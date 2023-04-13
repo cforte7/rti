@@ -1,23 +1,13 @@
 
 use chrono_tz::{ParseError, Tz, UTC};
-use confy;
 use serde::{Deserialize, Serialize};
 use std::{fmt, env};
 use crate::OkOrStringError;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct MyConfig {
     pub default_timezone: Option<String>,
     pub custom_parsing_tokens : Option<Vec<String>>
-}
-
-impl ::std::default::Default for MyConfig {
-    fn default() -> Self {
-        Self {
-            default_timezone: None,
-            custom_parsing_tokens: None
-        }
-    }
 }
 
 impl fmt::Display for MyConfig {
@@ -47,7 +37,7 @@ pub fn set_tz_config(tz_input: Option<String>) -> OkOrStringError {
     match confy::store("rti", new_config) {
         Ok(_) => Ok(Some(format!("Timezone updated to {}", timezone))),
         Err(e) => {
-            Err(format!("Error storing timezone: {}", e.to_string()))
+            Err(format!("Error storing timezone: {}", e))
         }
     }
 }
@@ -63,7 +53,7 @@ pub fn clear_tz_config() -> OkOrStringError {
     match confy::store("rti", new_config) {
         Ok(_) => Ok(Some("Timezone cleared.".to_string())),
         Err(e) => {
-            Err(format!("Error storing timezone: {}", e.to_string()))
+            Err(format!("Error storing timezone: {}", e))
         }
     }
 }
@@ -95,7 +85,7 @@ pub fn get_timezone() -> Tz {
     }
 
     let existing_config = load_config();
-    return if let Some(val) = existing_config.default_timezone {
+    if let Some(val) = existing_config.default_timezone {
         let tz: Tz = val.parse().unwrap();
         tz
     } else {
@@ -132,7 +122,7 @@ pub fn add_custom_token(new_token: Option<String>) -> OkOrStringError {
     match confy::store("rti", new_config) {
         Ok(_) => Ok(Some("Custom Token successfully added.".to_string())),
         Err(e) => {
-            Err(format!("Error storing custom token: {}", e.to_string()))
+            Err(format!("Error storing custom token: {}", e))
         }
     }
     
@@ -153,7 +143,7 @@ pub fn remove_custom_token(to_remove: Option<String>) -> OkOrStringError {
         .into_iter()
         .filter(|val| val!= &token)
         .collect();
-    if filtered_tokens.len() == 0 {
+    if filtered_tokens.is_empty() {
         return Ok(Some("No matching token found.".to_string()));
     }
 
@@ -170,7 +160,7 @@ pub fn remove_custom_token(to_remove: Option<String>) -> OkOrStringError {
     match confy::store("rti", new_config) {
         Ok(_) => Ok(Some("Custom token removed.".to_string())),
         Err(e) => {
-            Err(format!("Error removing custom token: {}", e.to_string()))
+            Err(format!("Error removing custom token: {}", e))
         }
     }
 }
@@ -182,5 +172,5 @@ pub fn view_tokens() -> OkOrStringError {
         Some(mut tokens) => existing_tokens.append(&mut tokens),
         None => return Err("No custom tokens exist!".to_string())
     };
-    Ok(Some(existing_tokens.join("\n").to_string()))
+    Ok(Some(existing_tokens.join("\n")))
 }
