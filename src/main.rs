@@ -1,7 +1,7 @@
 extern crate chrono;
 use chrono_tz::Tz;
 mod config;
-use config::config::{
+use config::{
     clear_tz_config,
     set_tz_config,
     get_timezone,
@@ -13,9 +13,12 @@ use config::config::{
 use std::env;
 
 mod datetime_parsing;
-use datetime_parsing::datetime_parsing::{parse_arg, epoch_to_datetime};
+use datetime_parsing::{parse_arg, epoch_to_datetime};
 
+mod cli;
+use cli::{parse_input, help, Action, ParsedInput};
 
+pub type OkOrStringError = Result<Option<String>, String>;
 
 fn fmt_and_print(arg: String, tz: &Tz, custom_tokens: &Vec<String>) {
     let maybe_int_parse = arg.parse::<i64>();
@@ -24,44 +27,50 @@ fn fmt_and_print(arg: String, tz: &Tz, custom_tokens: &Vec<String>) {
         Err(_) => parse_arg(&arg, tz, custom_tokens),
     };
 
-    println!("{}", format!("{} => {}", arg, parsed_value));
-}
-
-
-fn help() {
-    println!("RTI converts Unix epoch time to a human readable format and vice versa.");
-    println!("Enter values to convert separated by a space.\n");
-    println!("Additional commands:");
-    println!("    help -  View this message.");
-    println!("    set-tz - Set a configured timezone. Uses first argument after set-tz.");
-    println!("    clear-tz - Clear timezone config.");
-    println!("    add-token - Add a custom parsing token. Uses first argument after add-token. See https://docs.rs/chrono/0.4.0/chrono/format/strftime/index.html for syntax.");
-    println!("    remove-token - Remove a custom parsing token. No changes made if the token doesn't exist.");
-    println!("    view-tokens - See a list of stored custom parsing tokens.");
-}
-
-fn main() {
-    let input: Vec<String> = env::args().collect();
-
-    if input.len() == 1 {
-        println!("Must include at least one argument!");
-        return;
+    match parsed_value {
+        Ok(val) =>  println!("{} => {}", arg, val),
+        Err(_) => println!("Unable to parse value: {}", arg)
     }
-    let maybe_keyword: String = input[1].parse().unwrap();
-    match maybe_keyword.as_str() {
-        "help" => help(),
-        "set-tz" => set_tz_config(input[2].parse().unwrap()),
-        "clear-tz" => clear_tz_config(),
-        "add-token" => add_custom_token(input[2].parse().unwrap()),
-        "remove-token" => remove_custom_token(input[2].parse().unwrap()),
-        "view-tokens" => view_tokens(),
+}
+
+
+fn execute_action(input: ParsedInput) -> OkOrStringError {
+    match input.action {
+        Some(Action::Help) => help(),
+        Some(Action::SetTz) => set_tz_config(input.second_arg),
+        Some(Action::ClearTz) => clear_tz_config(),
+        Some(Action::AddToken) => add_custom_token(input.second_arg),
+        Some(Action::RemoveToken) => remove_custom_token(input.second_arg),
+        Some(Action::ViewTokens) => view_tokens(),
         _ => {
             let tz: Tz = get_timezone();
             let custom_tokens: Vec<String> = get_custom_tokens();
-            for elem in input[1..].iter() {
+            for elem in input.date_args {
                 fmt_and_print(elem.to_string(), &tz, &custom_tokens);
             }
             println!("Timezone: {}", tz);
+            Ok(None)
         }
+    }
+
+}
+
+fn main() {
+    let args: Vec<String> = env::args().collect();
+    let input = match parse_input(args) {
+        Ok(val) => val,
+        Err(e) => {
+            println!("Error: {}", e);
+            return;
+        }
+    };
+
+    match execute_action(input) {
+        Ok(resp) => {
+            if let Some(msg) = resp {
+                println!("{}", msg);
+            }
+        },
+        Err(e) => println!("Error: {}", e)
     }
 }
