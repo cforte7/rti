@@ -1,4 +1,4 @@
-# rusty-time-interpreter (rti)
+# Rusty Time Interpreter (rti)
 `rti` (Rusty Time Interpreter) is a command line tool for converting between unix epoch time and date/time strings. It is written in Rust and should run on any platform.
 
 This tool was inspired by the extremely useful [epoch-echo](https://github.com/ainsleymcgrath/epoch-echo) by Ainsley McGrath. While the tool is fantastic, the main issues were speed and portability which inspired me to write this in Rust.
