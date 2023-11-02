@@ -1,4 +1,4 @@
-# rusty-time-interpreter (rti)
+# Rusty Time Interpreter (rti)
 `rti` (Rusty Time Interpreter) is a command line tool for converting between unix epoch time and date/time strings. It is written in Rust and should run on any platform.
 
 This tool was inspired by the extremely useful [epoch-echo](https://github.com/ainsleymcgrath/epoch-echo) by Ainsley McGrath. While the tool is fantastic, the main issues were speed and portability which inspired me to write this in Rust.
@@ -12,7 +12,7 @@ cargo install rti
 This will create a globally executable command that can be used in your command line. **Note:** This has only been tested on macOS and Windows 10.
 
 # Usage
-RTI takes in an arbitrary number of command line arguments, either integer unix epochs or string date/time/datetimes and converts them to the opposite.
+`rti` takes in an arbitrary number of command line arguments, either integer unix epochs or string date/time/datetimes and converts them to the opposite.
 ```
 $ rti 1 1650627609 2022-04-22\ 11:40:09
 1 => 01-01-1970 00:00:01
@@ -33,7 +33,7 @@ Timezone: UTC
 ```
 
 ## Timezone
-RTI supports using custom timezone both by setting a persisted configuration and through environment variables.
+`rti` supports using custom timezone both by setting a persisted configuration and through environment variables.
 If no timezone is set in your local config or by environment variable, UTC will be used.
 ```
 
@@ -47,13 +47,13 @@ $ rti clear-tz
 $ TIMEZONE=America/Denver rti now
 ```
 
-RTI timezones are set in the following precedence:
+`rti` timezones are set in the following precedence:
 1. Environment variable
 2. Config
 3. UTC if no config or Env variable is present
 
 ## Custom Parsing Tokens
-RTI comes with preset parsing patterns, but you can also add your own datetime tokens to parse. 
+`rti` comes with preset parsing patterns, but you can also add your own datetime tokens to parse.
 Note that the tokens must be full datetime values (not just time or just date).
 
 See https://docs.rs/chrono/0.4.0/chrono/format/strftime/index.html for details on the syntax.

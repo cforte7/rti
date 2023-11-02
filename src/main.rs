@@ -17,6 +17,7 @@ pub type OkOrStringError = Result<Option<String>, String>;
 
 fn fmt_and_print(arg: String, tz: &Tz, custom_tokens: &Vec<String>) {
     let maybe_int_parse = arg.parse::<i64>();
+
     let parsed_value = match maybe_int_parse {
         Ok(val) => epoch_to_datetime(val, tz),
         Err(_) => parse_arg(&arg, tz, custom_tokens),
