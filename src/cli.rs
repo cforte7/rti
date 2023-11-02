@@ -16,9 +16,8 @@ pub fn help() -> OkOrStringError {
 pub struct ParsedInput {
     pub action: Option<Action>,
     pub second_arg: Option<String>,
-    pub date_args: Vec<String>
+    pub date_args: Vec<String>,
 }
-
 
 pub fn parse_input(input: Vec<String>) -> Result<ParsedInput, String> {
     let input_len = input.len();
@@ -26,13 +25,11 @@ pub fn parse_input(input: Vec<String>) -> Result<ParsedInput, String> {
         return Err("Must include at least one argument!".to_string());
     }
     let maybe_action = match input[1].parse() {
-        Ok(val) =>  {
-            Action::from_string(val)
-        },
-        Err(_) => return Err("Error parsing arg.".to_string())
+        Ok(val) => Action::from_string(val),
+        Err(_) => return Err("Error parsing arg.".to_string()),
     };
 
-    let second_arg : Option<String> = input.get(2).cloned();
+    let second_arg: Option<String> = input.get(2).cloned();
 
     // if we have an action, we aren't doing any datetime parsing
     // so we just give empty list, otherwise all of our args
@@ -45,7 +42,7 @@ pub fn parse_input(input: Vec<String>) -> Result<ParsedInput, String> {
     Ok(ParsedInput {
         action: maybe_action,
         second_arg,
-        date_args
+        date_args,
     })
 }
 
@@ -55,20 +52,19 @@ pub enum Action {
     ClearTz,
     AddToken,
     RemoveToken,
-    ViewTokens
+    ViewTokens,
 }
-
 
 impl Action {
     fn from_string(input: String) -> Option<Action> {
         match input.as_str() {
-            "help"  => Some(Action::Help),
-            "set-tz"  => Some(Action::SetTz),
-            "clear-tz"  => Some(Action::ClearTz),
+            "help" => Some(Action::Help),
+            "set-tz" => Some(Action::SetTz),
+            "clear-tz" => Some(Action::ClearTz),
             "add-token" => Some(Action::AddToken),
             "remove-token" => Some(Action::RemoveToken),
             "view-tokens" => Some(Action::ViewTokens),
-            _  => None,
+            _ => None,
         }
     }
 }

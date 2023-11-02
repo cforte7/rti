@@ -2,21 +2,16 @@ extern crate chrono;
 use chrono_tz::Tz;
 mod config;
 use config::{
-    clear_tz_config,
-    set_tz_config,
-    get_timezone,
-    get_custom_tokens,
-    add_custom_token,
-    remove_custom_token,
-    view_tokens
+    add_custom_token, clear_tz_config, get_custom_tokens, get_timezone, remove_custom_token,
+    set_tz_config, view_tokens,
 };
 use std::env;
 
 mod datetime_parsing;
-use datetime_parsing::{parse_arg, epoch_to_datetime};
+use datetime_parsing::{epoch_to_datetime, parse_arg};
 
 mod cli;
-use cli::{parse_input, help, Action, ParsedInput};
+use cli::{help, parse_input, Action, ParsedInput};
 
 pub type OkOrStringError = Result<Option<String>, String>;
 
@@ -28,11 +23,10 @@ fn fmt_and_print(arg: String, tz: &Tz, custom_tokens: &Vec<String>) {
     };
 
     match parsed_value {
-        Ok(val) =>  println!("{} => {}", arg, val),
-        Err(_) => println!("Unable to parse value: {}", arg)
+        Ok(val) => println!("{} => {}", arg, val),
+        Err(_) => println!("Unable to parse value: {}", arg),
     }
 }
-
 
 fn execute_action(input: ParsedInput) -> OkOrStringError {
     match input.action {
@@ -52,7 +46,6 @@ fn execute_action(input: ParsedInput) -> OkOrStringError {
             Ok(None)
         }
     }
-
 }
 
 fn main() {
@@ -70,7 +63,7 @@ fn main() {
             if let Some(msg) = resp {
                 println!("{}", msg);
             }
-        },
-        Err(e) => println!("Error: {}", e)
+        }
+        Err(e) => println!("Error: {}", e),
     }
 }
