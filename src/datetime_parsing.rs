@@ -96,7 +96,7 @@ pub fn epoch_to_datetime(mut epoch: i64, tz: &Tz) -> Result<String, String> {
 
     // If we see a number with 13 digits we assume millis
     if epoch > PROBABLY_MILLIS_BOUND {
-        println!("Parsing timestamp as milliseconds.");
+        println!("Parsing epoch time as milliseconds.");
         epoch = epoch / 1000;
     }
     let mut parsed = Parsed::new();
