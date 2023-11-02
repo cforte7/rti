@@ -14,20 +14,12 @@ mod cli;
 use cli::{help, parse_input, Action, ParsedInput};
 
 pub type OkOrStringError = Result<Option<String>, String>;
-const PROBABLY_MILLIS_BOUND: i64 = 1000000000000;
 
 fn fmt_and_print(arg: String, tz: &Tz, custom_tokens: &Vec<String>) {
     let maybe_int_parse = arg.parse::<i64>();
 
     let parsed_value = match maybe_int_parse {
-        Ok(mut val) => {
-            // If we see a number with 13 digits we assume millis
-            if val > PROBABLY_MILLIS_BOUND {
-                println!("Parsing timestamp as milliseconds.");
-                val = val / 1000;
-            }
-            epoch_to_datetime(val, tz)
-        }
+        Ok(val) => epoch_to_datetime(val, tz),
         Err(_) => parse_arg(&arg, tz, custom_tokens),
     };
 

@@ -90,8 +90,15 @@ pub fn parse_arg(arg: &str, tz: &Tz, custom_tokens: &Vec<String>) -> Result<Stri
 }
 
 const DATETIME_PARSE_FORMAT: &str = "%m-%d-%Y %H:%M:%S";
-pub fn epoch_to_datetime(epoch: i64, tz: &Tz) -> Result<String, String> {
+const PROBABLY_MILLIS_BOUND: i64 = 1000000000000;
+pub fn epoch_to_datetime(mut epoch: i64, tz: &Tz) -> Result<String, String> {
     // take in epoch time and return datetime as timezone adjusted string.
+
+    // If we see a number with 13 digits we assume millis
+    if epoch > PROBABLY_MILLIS_BOUND {
+        println!("Parsing timestamp as milliseconds.");
+        epoch = epoch / 1000;
+    }
     let mut parsed = Parsed::new();
     parsed.set_timestamp(epoch).unwrap();
     let parsed_with_timezone = parsed.to_datetime_with_timezone(tz);
@@ -543,6 +550,15 @@ mod utc_epoch_to_datetime {
         const NOV_TEN_TWENTY_TWO: i64 = 1668060000;
         assert_eq!(
             epoch_to_datetime(NOV_TEN_TWENTY_TWO, &UTC),
+            Ok("11-10-2022 06:00:00".to_string())
+        );
+    }
+
+    #[test]
+    fn test_millis_epoch() {
+        const NOV_TEN_TWENTY_TWO_MILLIS: i64 = 1668060000000;
+        assert_eq!(
+            epoch_to_datetime(NOV_TEN_TWENTY_TWO_MILLIS, &UTC),
             Ok("11-10-2022 06:00:00".to_string())
         );
     }
