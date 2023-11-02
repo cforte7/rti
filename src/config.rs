@@ -1,13 +1,12 @@
-
+use crate::OkOrStringError;
 use chrono_tz::{ParseError, Tz, UTC};
 use serde::{Deserialize, Serialize};
-use std::{fmt, env};
-use crate::OkOrStringError;
+use std::{env, fmt};
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct MyConfig {
     pub default_timezone: Option<String>,
-    pub custom_parsing_tokens : Option<Vec<String>>
+    pub custom_parsing_tokens: Option<Vec<String>>,
 }
 
 impl fmt::Display for MyConfig {
@@ -25,9 +24,9 @@ pub fn set_tz_config(tz_input: Option<String>) -> OkOrStringError {
     let timezone: Tz = match tz_input {
         Some(val) => match val.parse() {
             Ok(v) => v,
-            Err(_) => return Err("Invalid timezone provided.".to_string())
+            Err(_) => return Err("Invalid timezone provided.".to_string()),
         },
-        None => return Err("Must provide timezone argument.".to_string())
+        None => return Err("Must provide timezone argument.".to_string()),
     };
     let existing_config = load_config();
     let new_config = MyConfig {
@@ -36,9 +35,7 @@ pub fn set_tz_config(tz_input: Option<String>) -> OkOrStringError {
     };
     match confy::store("rti", new_config) {
         Ok(_) => Ok(Some(format!("Timezone updated to {}", timezone))),
-        Err(e) => {
-            Err(format!("Error storing timezone: {}", e))
-        }
+        Err(e) => Err(format!("Error storing timezone: {}", e)),
     }
 }
 
@@ -52,9 +49,7 @@ pub fn clear_tz_config() -> OkOrStringError {
 
     match confy::store("rti", new_config) {
         Ok(_) => Ok(Some("Timezone cleared.".to_string())),
-        Err(e) => {
-            Err(format!("Error storing timezone: {}", e))
-        }
+        Err(e) => Err(format!("Error storing timezone: {}", e)),
     }
 }
 
@@ -67,7 +62,7 @@ fn get_env_timezone() -> Option<Tz> {
         let parsed_env_tz: Result<Tz, ParseError> = env_tz.parse();
         match parsed_env_tz {
             Ok(tz) => return Some(tz),
-            _ => (panic!("Unable to parse TIMEZONE env variable.")),
+            _ => panic!("Unable to parse TIMEZONE env variable."),
         }
     };
     None
@@ -98,19 +93,19 @@ pub fn get_custom_tokens() -> Vec<String> {
     let existing_config = load_config();
     match existing_config.custom_parsing_tokens {
         Some(tokens) => tokens,
-        None=>Vec::new()
+        None => Vec::new(),
     }
 }
 
 pub fn add_custom_token(new_token: Option<String>) -> OkOrStringError {
     let token: String = match new_token {
         Some(val) => val,
-        None => return Err("Must provide timezone argument.".to_string())
+        None => return Err("Must provide timezone argument.".to_string()),
     };
 
     let mut existing_tokens = match load_config().custom_parsing_tokens {
         Some(tokens) => tokens,
-        None=>Vec::new()
+        None => Vec::new(),
     };
 
     existing_tokens.push(token);
@@ -121,27 +116,24 @@ pub fn add_custom_token(new_token: Option<String>) -> OkOrStringError {
     };
     match confy::store("rti", new_config) {
         Ok(_) => Ok(Some("Custom Token successfully added.".to_string())),
-        Err(e) => {
-            Err(format!("Error storing custom token: {}", e))
-        }
+        Err(e) => Err(format!("Error storing custom token: {}", e)),
     }
-    
 }
 
 pub fn remove_custom_token(to_remove: Option<String>) -> OkOrStringError {
     let token: String = match to_remove {
         Some(val) => val,
-        None => return Err("Must provide token to remove.".to_string())
+        None => return Err("Must provide token to remove.".to_string()),
     };
     let existing_tokens: Vec<String> = match load_config().custom_parsing_tokens {
         Some(tokens) => tokens,
-        None=>{
+        None => {
             return Ok(Some("No tokens to remove.".to_string()));
         }
     };
     let filtered_tokens: Vec<String> = existing_tokens
         .into_iter()
-        .filter(|val| val!= &token)
+        .filter(|val| val != &token)
         .collect();
     if filtered_tokens.is_empty() {
         return Ok(Some("No matching token found.".to_string()));
@@ -149,7 +141,7 @@ pub fn remove_custom_token(to_remove: Option<String>) -> OkOrStringError {
 
     let tokens_to_store = match filtered_tokens.len() {
         0 => None,
-        _ => Some(filtered_tokens)
+        _ => Some(filtered_tokens),
     };
 
     let new_config = MyConfig {
@@ -159,9 +151,7 @@ pub fn remove_custom_token(to_remove: Option<String>) -> OkOrStringError {
 
     match confy::store("rti", new_config) {
         Ok(_) => Ok(Some("Custom token removed.".to_string())),
-        Err(e) => {
-            Err(format!("Error removing custom token: {}", e))
-        }
+        Err(e) => Err(format!("Error removing custom token: {}", e)),
     }
 }
 
@@ -170,7 +160,7 @@ pub fn view_tokens() -> OkOrStringError {
     let mut existing_tokens: Vec<String> = vec!["Custom datetime tokens:".to_string()];
     match load_config().custom_parsing_tokens {
         Some(mut tokens) => existing_tokens.append(&mut tokens),
-        None => return Err("No custom tokens exist!".to_string())
+        None => return Err("No custom tokens exist!".to_string()),
     };
     Ok(Some(existing_tokens.join("\n")))
 }
