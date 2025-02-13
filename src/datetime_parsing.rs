@@ -483,6 +483,14 @@ mod with_tz_datetime_tests {
             Ok("1650652809".to_string())
         );
     }
+
+    #[test]
+    fn test_dst_changeover() {
+        assert_eq!(
+            parse_arg("3-10-2024 2:00", &Central, &EMPTY_VEC),
+            Ok("1710057600".to_string())
+        );
+    }
 }
 
 #[cfg(test)]
