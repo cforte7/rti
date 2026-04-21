@@ -39,6 +39,16 @@ fn datetime_to_epoch(datetime: NaiveDateTime, tz: &Tz) -> Result<String, String>
     let tz_aware_result = (*tz).from_local_datetime(&datetime);
     let tz_aware = match tz_aware_result {
         LocalResult::Single(val) => val,
+        LocalResult::None => {
+            // Time falls in the DST spring-forward gap (e.g. 2:00 AM on spring-forward day).
+            // Adding 1 hour lands us at the first valid post-transition time, which has the
+            // same UTC value as interpreting the gap time using the pre-transition offset.
+            let adjusted = datetime + Duration::hours(1);
+            match (*tz).from_local_datetime(&adjusted) {
+                LocalResult::Single(val) => val,
+                _ => return Err(INVALID_ARG.to_string()),
+            }
+        }
         _ => return Err(INVALID_ARG.to_string()),
     };
     Ok(tz_aware.timestamp().to_string())
@@ -481,6 +491,14 @@ mod with_tz_datetime_tests {
         assert_eq!(
             parse_arg("2022-04-22 13:40:09", &Central, &EMPTY_VEC),
             Ok("1650652809".to_string())
+        );
+    }
+
+    #[test]
+    fn test_dst_changeover() {
+        assert_eq!(
+            parse_arg("3-10-2024 2:00", &Central, &EMPTY_VEC),
+            Ok("1710057600".to_string())
         );
     }
 }
